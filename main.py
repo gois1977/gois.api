@@ -25,7 +25,6 @@ PROVIDERS = [
         "name": "Groq",
         "env": "GROQ_API_KEY",
         "url": "https://api.groq.com/openai/v1/chat/completions",
-        # Cada modelo na Groq tem rate-limit separado; rodar entre eles evita o HTTP 429!
         "models": [
             os.environ.get("GROQ_MODEL", "").strip() or "llama-3.3-70b-versatile",
             "openai/gpt-oss-120b",
@@ -47,7 +46,6 @@ PROVIDERS = [
         "name": "OpenRouter",
         "env": "OPENROUTER_API_KEY",
         "url": "https://openrouter.ai/api/v1/chat/completions",
-        # Modelos 100% gratuitos (:free) para eliminar o erro HTTP 402!
         "models": [
             "deepseek/deepseek-chat-v3-0324:free",
             "deepseek/deepseek-r1:free",
@@ -151,7 +149,7 @@ async def make_llm_request(payload: dict):
                             errors.append(f"{p['name']}/{model_name}: sem choices")
                         elif resp.status_code == 429:
                             errors.append(f"{p['name']}/{model_name}: HTTP 429")
-                            await asyncio.sleep(0.4)  # Pausa curta e tenta logo o modelo seguinte
+                            await asyncio.sleep(0.4)
                         else:
                             errors.append(f"{p['name']}/{model_name}: HTTP {resp.status_code}")
                     except Exception as e:
@@ -208,7 +206,6 @@ async def stream_llm_request(payload: dict):
                     except Exception:
                         pass
 
-    # Fallback non-stream caso todos os streams falhem
     data, errors = await make_llm_request(payload)
     if data and data.get("choices"):
         text = data["choices"][0].get("message", {}).get("content", "")
